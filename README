@@ -1,0 +1,2 @@
+soap: attributes management, soap.client interface. ipv6: fix-simultaneous socket receive bug. server: anonymized webserver version. build: rts-adalabs compatible build
+
