@@ -30,6 +30,8 @@
 pragma Ada_2012;
 
 with AWS.Client;
+with AWS.Response;
+
 with SOAP.Message.Payload;
 with SOAP.Message.Response;
 with SOAP.WSDL.Schema;
@@ -71,5 +73,31 @@ package SOAP.Client is
       return Message.Response.Object'Class
    with Pre => AWS.Client.Host (Connection)'Length > 0;
    --  Idem as above, but use an already opened connection
+
+   function Call
+     (Connection   : in out AWS.Client.HTTP_Connection;
+      SOAPAction   : String;
+      P            : Message.Payload.Object;
+      Asynchronous : Boolean := False;
+      Schema       : WSDL.Schema.Definition := WSDL.Schema.Empty)
+      return AWS.Response.Data;
+   --  Idem as above, but returning an AWS.Response.Data
+   --
+
+   function Call
+     (URL          : String;
+      P            : Message.Payload.Object;
+      SOAPAction   : String                     := No_SOAPAction;
+      User         : String                     := Not_Specified;
+      Pwd          : String                     := Not_Specified;
+      Proxy        : String                     := Not_Specified;
+      Proxy_User   : String                     := Not_Specified;
+      Proxy_Pwd    : String                     := Not_Specified;
+      Timeouts     : AWS.Client.Timeouts_Values := AWS.Client.No_Timeout;
+      Asynchronous : Boolean := False;
+      Schema       : WSDL.Schema.Definition := WSDL.Schema.Empty)
+      return AWS.Response.Data;
+   --  Idem as above, but returning an AWS.Response.Data
+   --
 
 end SOAP.Client;

@@ -50,7 +50,8 @@ package body SOAP.Types.Untyped is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, To_Unbounded_String (L_V));
+              NS, SOAP.Types.Attribute_Containers.Empty_Map,
+              To_Unbounded_String (L_V));
    end S;
 
    overriding function S
@@ -63,7 +64,8 @@ package body SOAP.Types.Untyped is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, Utils.To_Utf8 (V));
+              NS, SOAP.Types.Attribute_Containers.Empty_Map,
+              Utils.To_Utf8 (V));
    end S;
 
 end SOAP.Types.Untyped;

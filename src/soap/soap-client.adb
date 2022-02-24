@@ -30,9 +30,12 @@
 with Ada.Streams;
 with Ada.Strings.Unbounded;
 
+with AWS.Client.XML.Input_Sources;
 with AWS.Messages;
-with AWS.Response;
+with AWS.Response.Set;
 with AWS.URL;
+
+with Unicode;
 
 with SOAP.Message.Response.Error;
 with SOAP.Message.XML;
@@ -170,6 +173,109 @@ package body SOAP.Client is
       when others =>
          Free (XML_Str);
          raise;
+   end Call;
+
+   ----------
+   -- Call --
+   ----------
+
+   function Call
+     (URL          : String;
+      P            : Message.Payload.Object;
+      SOAPAction   : String                     := No_SOAPAction;
+      User         : String                     := Not_Specified;
+      Pwd          : String                     := Not_Specified;
+      Proxy        : String                     := Not_Specified;
+      Proxy_User   : String                     := Not_Specified;
+      Proxy_Pwd    : String                     := Not_Specified;
+      Timeouts     : AWS.Client.Timeouts_Values := AWS.Client.No_Timeout;
+      Asynchronous : Boolean := False;
+      Schema       : WSDL.Schema.Definition := WSDL.Schema.Empty)
+      return AWS.Response.Data
+   is
+      Connection : AWS.Client.HTTP_Connection;
+   begin
+      AWS.Client.Create
+        (Connection,
+         URL, User, Pwd, Proxy, Proxy_User, Proxy_Pwd,
+         Persistent => False,
+         Timeouts   => Timeouts);
+
+      declare
+         Response : constant AWS.Response.Data :=
+                    Call (Connection, SOAPAction, P, Asynchronous, Schema);
+      begin
+         AWS.Client.Close (Connection);
+         return Response;
+      end;
+   exception
+      when others =>
+         AWS.Client.Close (Connection);
+         raise;
+   end Call;
+
+   ----------
+   -- Call --
+   ----------
+
+   function Call
+     (Connection   : in out AWS.Client.HTTP_Connection;
+      SOAPAction   : String;
+      P            : Message.Payload.Object;
+      Asynchronous : Boolean := False;
+      Schema       : WSDL.Schema.Definition := WSDL.Schema.Empty)
+      return AWS.Response.Data
+   is
+      pragma Unreferenced (Asynchronous, Schema);
+      function SOAP_Action return String;
+      --  Returns the proper SOAPAction string for this call
+
+      -----------------
+      -- SOAP_Action --
+      -----------------
+
+      function SOAP_Action return String is
+      begin
+         if SOAPAction = No_SOAPAction then
+            declare
+               URL        : constant String := AWS.Client.Host (Connection);
+               URL_Object : constant AWS.URL.Object := AWS.URL.Parse (URL);
+            begin
+               return AWS.URL.URL (URL_Object) & '#'
+                      & SOAP.Message.Payload.Procedure_Name (P);
+            end;
+
+         elsif SOAPAction = "" then
+            --  Empty SOAP Action
+            return """""";
+
+         else
+            return SOAPAction;
+         end if;
+      end SOAP_Action;
+
+      Response : AWS.Response.Data;
+
+   begin
+      AWS.Client.SOAP_Post
+        (Connection, Response, SOAP_Action, SOAP.Message.XML.Image (P), True);
+      declare
+         use AWS.Client.XML.Input_Sources;
+         Source : HTTP_Input;
+      begin
+         Create (Connection, Source);
+         while not Source.Eof loop
+            declare
+               C : Unicode.Unicode_Char;
+            begin
+               Source.Next_Char (C);
+               AWS.Response.Set.Append_Body (Response, Character'Val (C) & "");
+            end;
+         end loop;
+         Close (Source);
+      end;
+
+      return Response;
    end Call;
 
 end SOAP.Client;

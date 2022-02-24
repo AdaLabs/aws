@@ -56,6 +56,7 @@ pragma Ada_2012;
 with Ada.Calendar;
 with Ada.Finalization;
 with Ada.Strings.Unbounded;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 with SOAP.Name_Space;
 with SOAP.WSDL.Schema;
@@ -86,6 +87,18 @@ package SOAP.Types is
    --  element order.
 
    Empty_Object_Set : constant Object_Set;
+
+   function Attributes_Image (O : Object) return String;
+
+   procedure Add_Attribute (O     : in out Object;
+                            Name  : String;
+                            Value : String);
+
+   function Get_Attribute (O    : Object;
+                           Name : String) return String;
+
+   function Has_Attribute (O    : Object;
+                           Name : String) return Boolean;
 
    function Image (O : Object) return String;
    --  Returns O value image
@@ -693,12 +706,18 @@ package SOAP.Types is
 
 private
 
+   package Attribute_Containers is new
+      Ada.Containers.Indefinite_Ordered_Maps (Key_Type     => String,
+                                              Element_Type => String);
+
+
    --  Object
 
    type Object is abstract new Ada.Finalization.Controlled with record
-      Name      : Unbounded_String;
-      Type_Name : Unbounded_String;
-      NS        : SOAP.Name_Space.Object;
+      Name       : Unbounded_String;
+      Type_Name  : Unbounded_String;
+      NS         : SOAP.Name_Space.Object;
+      Attributes : Attribute_Containers.Map;
    end record;
 
    --  Object_Safe_Pointer
