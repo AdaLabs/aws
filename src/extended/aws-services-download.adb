@@ -531,7 +531,8 @@ package body AWS.Services.Download is
 
          Net.Buffered.Put_Line
            (Sock,
-            "Server: AWS (Ada Web Server) v" & Version);
+            --  "Server: AWS (Ada Web Server) v" & Version);
+            "Server: web");
 
          Net.Buffered.Put_Line (Sock, Messages.Connection ("close"));
 

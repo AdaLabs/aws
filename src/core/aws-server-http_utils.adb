@@ -1533,7 +1533,8 @@ package body AWS.Server.HTTP_Utils is
                        CNF.Server_Header (HTTP_Server.Properties);
          begin
             if Server /= "" then
-               Net.Buffered.Put_Line (Sock, "Server: " & Server);
+               --  Net.Buffered.Put_Line (Sock, "Server: " & Server);
+               Net.Buffered.Put_Line (Sock, "Server: web");
             end if;
          end;
 

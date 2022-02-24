@@ -88,8 +88,8 @@ package AWS.Default with Pure is
 
    --  Client configuration
 
-   User_Agent                      : constant String :=
-                                       "AWS (Ada Web Server) v" & Version;
+   User_Agent                      : constant String := "web";
+                                       --  "AWS (Ada Web Server) v" & Version;
    Server_Header                   : constant String :=
                                        User_Agent;
 

@@ -586,7 +586,8 @@ package body AWS.Log is
       if not Log.Header_Written then
          Log.Header_Written := True;
 
-         Log.Writer ("#Software: AWS (Ada Web Server) v" & Version);
+         --  Log.Writer ("#Software: AWS (Ada Web Server) v" & Version);
+         Log.Writer ("#Software: web");
          Log.Writer ("#Date: " & Image (Now, ISO_Date & " %T"));
          Log.Writer ("#Fields:");
 
