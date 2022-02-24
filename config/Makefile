@@ -99,6 +99,8 @@ else
 			> aws-os_lib-tmplt.i; \
 		gcc -S aws-os_lib-tmplt.i; \
 		../xoscons aws-os_lib )
+	mkdir -p $(SDIR)/src/../../adalabs/setup/
+	cp -r $(SDIR)/src $(SDIR)/src/../../adalabs/setup/
 endif
 	$(RM) -f $(SDIR)/src/aws-os_lib-tmplt*
 endif
