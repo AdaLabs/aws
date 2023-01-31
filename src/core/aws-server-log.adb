@@ -83,8 +83,7 @@ package body AWS.Server.Log is
    procedure Start
      (Web_Server      : in out HTTP;
       Split_Mode      : AWS.Log.Split_Mode := AWS.Log.None;
-      Filename_Prefix : String             := "";
-      Auto_Flush      : Boolean            := False)
+      Filename_Prefix : String             := "")
    is
       use type AWS.Log.Split_Mode;
 
@@ -121,7 +120,7 @@ package body AWS.Server.Log is
          Size_Limit      => CNF.Log_Size_Limit (Web_Server.Properties),
          File_Directory  => CNF.Log_File_Directory (Web_Server.Properties),
          Filename_Prefix => CNF.Log_Filename_Prefix (Web_Server.Properties),
-         Auto_Flush      => Auto_Flush);
+         Auto_Flush      => CNF.Log_Auto_Flush (Web_Server.Properties));
    end Start;
 
    -----------

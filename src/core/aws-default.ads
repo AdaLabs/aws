@@ -97,6 +97,7 @@ package AWS.Default with Pure is
    --  replaced by the running program name.
 
    Log_Activated                   : constant Boolean := False;
+   Log_Auto_Flush                  : constant Boolean := False;
    Log_File_Directory              : constant String := "./";
 
    Log_Split_Mode                  : constant String := "NONE";
