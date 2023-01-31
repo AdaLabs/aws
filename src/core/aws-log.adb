@@ -80,6 +80,7 @@ package body AWS.Log is
          --  Could not call Stop, because Stop would write to log again and
          --  it cause unlimited recursion.
 
+         Text_IO.Flush (Log.File);
          Text_IO.Close (Log.File);
 
          Start (Log             => Log,
@@ -94,6 +95,7 @@ package body AWS.Log is
       then
          Keep_Split := Log.Split;
 
+         Text_IO.Flush (Log.File);
          Text_IO.Close (Log.File);
 
          Start (Log             => Log,
@@ -430,6 +432,7 @@ package body AWS.Log is
          if Log.Writer = null then
             if Text_IO.Is_Open (Log.File) then
                Write (Log, "Stop logging.");
+               Text_IO.Flush (Log.File);
                Text_IO.Close (Log.File);
             end if;
          else
