@@ -455,6 +455,15 @@ package body AWS.Config is
       return O.P (Log_Activated).Bool_Value;
    end Log_Activated;
 
+   -------------------
+   -- Log_Activated --
+   -------------------
+
+   function Log_Auto_Flush (O : Object) return Boolean is
+   begin
+      return O.P (Log_Auto_Flush).Bool_Value;
+   end Log_Auto_Flush;
+
    -----------------------------------------
    -- Log_Extended_Fields_Generic_Iterate --
    -----------------------------------------

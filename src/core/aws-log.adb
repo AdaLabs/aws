@@ -43,6 +43,17 @@ package body AWS.Log is
    procedure Check_Split (Log : in out Object; Now : Ada.Calendar.Time);
    --  Split log file if necessary
 
+   function Get_Prefix (Split           : Split_Mode;
+                        File_Directory  : String;
+                        Filename_Prefix : String;
+                        Clock           : Ada.Calendar.Time) return String;
+   --  Returns the prefix to use for the log filename
+
+   function Log_Prefix (Prefix : String) return String;
+   --  Returns the prefix to be added before the log filename. The returned
+   --  value is the executable name without directory and filetype if Prefix
+   --  is Not_Specified otherwise Prefix is returned.
+
    procedure Write_Callback (Log : in out Object; Data : in out Fields_Table);
    --  Write extended format record to log file and prepare record for the next
    --  data. It is not allowed to use same Fields_Table with different extended
@@ -79,9 +90,20 @@ package body AWS.Log is
       then
          --  Could not call Stop, because Stop would write to log again and
          --  it cause unlimited recursion.
-
-         Text_IO.Close (Log.File);
-
+         declare
+            Current_Filename  : constant String := Text_IO.Name (Log.File);
+            Splitted_Filename : constant String
+              := Get_Prefix
+                   (Split           => Log.Split,
+                    File_Directory  => To_String (Log.File_Directory),
+                    Filename_Prefix => To_String (Log.Filename_Prefix),
+                    Clock           => Now) & ".log";
+         begin
+            Text_IO.Flush (Log.File);
+            Text_IO.Close (Log.File);
+            Ada.Directories.Rename (Old_Name => Current_Filename,
+                                    New_Name => Splitted_Filename);
+         end;
          Start (Log             => Log,
                 Split           => Log.Split,
                 Size_Limit      => Log.Size_Limit,
@@ -93,9 +115,20 @@ package body AWS.Log is
         and then Get_Position (Log.File) > Log.Size_Limit
       then
          Keep_Split := Log.Split;
-
-         Text_IO.Close (Log.File);
-
+         declare
+            Current_Filename  : constant String := Text_IO.Name (Log.File);
+            Splitted_Filename : constant String
+              := Get_Prefix
+                   (Split           => Log.Split,
+                    File_Directory  => To_String (Log.File_Directory),
+                    Filename_Prefix => To_String (Log.Filename_Prefix),
+                    Clock           => Now) & ".log";
+         begin
+            Text_IO.Flush (Log.File);
+            Text_IO.Close (Log.File);
+            Ada.Directories.Rename (Old_Name => Current_Filename,
+                                    New_Name => Splitted_Filename);
+         end;
          Start (Log             => Log,
                 Split           => Each_Run,
                 Size_Limit      => Log.Size_Limit,
@@ -166,6 +199,25 @@ package body AWS.Log is
       return Natural (ICS.ftell (C_Stream (File)));
    end Get_Position;
 
+   ----------------
+   -- Get_Prefix --
+   ----------------
+
+   function Get_Prefix (Split           : Split_Mode;
+                        File_Directory  : String;
+                        Filename_Prefix : String;
+                        Clock           : Ada.Calendar.Time) return String is
+   begin
+      if Split = None then
+         return Utils.Normalized_Directory (File_Directory)
+           & Log_Prefix (Filename_Prefix);
+      else
+         return Utils.Normalized_Directory (File_Directory)
+           & Log_Prefix (Filename_Prefix) & '-'
+           & GNAT.Calendar.Time_IO.Image (Clock, "%Y-%m-%d");
+      end if;
+   end Get_Prefix;
+
    ---------------
    -- Is_Active --
    ---------------
@@ -174,6 +226,63 @@ package body AWS.Log is
    begin
       return Text_IO.Is_Open (Log.File) or else Log.Writer /= null;
    end Is_Active;
+
+   ---------------
+   -- Log_Prefix --
+   ---------------
+
+   function Log_Prefix (Prefix : String) return String is
+
+      function Prog_Name return String;
+      --  Return current program name
+
+      ---------------
+      -- Prog_Name --
+      ---------------
+
+      function Prog_Name return String is
+         Name  : constant String := Ada.Command_Line.Command_Name;
+         First : Natural;
+         Last  : Natural;
+      begin
+         First := Strings.Fixed.Index
+           (Name, Strings.Maps.To_Set ("/\"), Going => Strings.Backward);
+
+         if First = 0 then
+            First := Name'First;
+         else
+            First := First + 1;
+         end if;
+
+         Last := Strings.Fixed.Index
+           (Name (First .. Name'Last), ".", Strings.Backward);
+
+         if Last = 0 then
+            Last := Name'Last;
+         else
+            Last := Last - 1;
+         end if;
+
+         return Name (First .. Last);
+      end Prog_Name;
+
+   begin
+      if Prefix = Not_Specified then
+         return "";
+
+      else
+         declare
+            K : constant Natural := Strings.Fixed.Index (Prefix, "@");
+         begin
+            if K = 0 then
+               return Prefix;
+            else
+               return Prefix (Prefix'First .. K - 1)
+                 & Prog_Name & Prefix (K + 1 .. Prefix'Last);
+            end if;
+         end;
+      end if;
+   end Log_Prefix;
 
    ----------
    -- Mode --
@@ -274,90 +383,15 @@ package body AWS.Log is
       Filename_Prefix : String     := Not_Specified;
       Auto_Flush      : Boolean    := False)
    is
-      function Get_Prefix return String;
-      --  Returns the prefix to use for the log filename
-
-      function Log_Prefix (Prefix : String) return String;
-      --  Returns the prefix to be added before the log filename. The returned
-      --  value is the executable name without directory and filetype if Prefix
-      --  is Not_Specified otherwise Prefix is returned.
-
-      Now : constant Calendar.Time := Calendar.Clock;
-
-      ----------------
-      -- Get_Prefix --
-      ----------------
-
-      function Get_Prefix return String is
-      begin
-         if Split = None then
-            return Utils.Normalized_Directory (File_Directory)
-              & Log_Prefix (Filename_Prefix);
-         else
-            return Utils.Normalized_Directory (File_Directory)
-              & Log_Prefix (Filename_Prefix) & '-'
-              & GNAT.Calendar.Time_IO.Image (Now, "%Y-%m-%d");
-         end if;
-      end Get_Prefix;
-
-      ----------------
-      -- Log_Prefix --
-      ----------------
-
-      function Log_Prefix (Prefix : String) return String is
-
-         function Prog_Name return String;
-         --  Return current program name
-
-         ---------------
-         -- Prog_Name --
-         ---------------
-
-         function Prog_Name return String is
-            Name  : constant String := Ada.Command_Line.Command_Name;
-            First : Natural;
-            Last  : Natural;
-         begin
-            First := Strings.Fixed.Index
-              (Name, Strings.Maps.To_Set ("/\"), Going => Strings.Backward);
-
-            if First = 0 then
-               First := Name'First;
-            else
-               First := First + 1;
-            end if;
-
-            Last := Strings.Fixed.Index
-              (Name (First .. Name'Last), ".", Strings.Backward);
-
-            if Last = 0 then
-               Last := Name'Last;
-            else
-               Last := Last - 1;
-            end if;
-
-            return Name (First .. Last);
-         end Prog_Name;
-
-      begin
-         if Prefix = Not_Specified then
-            return "";
-
-         else
-            declare
-               K : constant Natural := Strings.Fixed.Index (Prefix, "@");
-            begin
-               if K = 0 then
-                  return Prefix;
-               else
-                  return Prefix (Prefix'First .. K - 1)
-                    & Prog_Name & Prefix (K + 1 .. Prefix'Last);
-               end if;
-            end;
-         end if;
-      end Log_Prefix;
-
-      Prefix    : constant String := Get_Prefix;
+      Now    : constant Calendar.Time := Calendar.Clock;
+      Prefix : constant String
+        := Get_Prefix (Split           => Split,
+                       File_Directory  => File_Directory,
+                       Filename_Prefix => Filename_Prefix,
+                       Clock           => Now);
+      Initial_Prefix : constant String
+        := Utils.Normalized_Directory (File_Directory)
+           & Log_Prefix (Filename_Prefix);
       Filename  : Unbounded_String;
       Time_Part : String (1 .. 7);
 
@@ -370,7 +404,7 @@ package body AWS.Log is
       Log.Header_Written       := False;
       Log.Stop_Has_Been_Called := False;
 
-      Filename := To_Unbounded_String (Prefix & ".log");
+      Filename := To_Unbounded_String (Initial_Prefix & ".log");
 
       case Split is
          when None =>
@@ -378,17 +412,26 @@ package body AWS.Log is
 
          when Each_Run =>
             if Directories.Exists (To_String (Filename)) then
-               Time_Part := GNAT.Calendar.Time_IO.Image (Now, "-%H%M%S");
+               declare
+                  Current_Filename : constant String := To_String (Filename);
+                  New_Filename     :          Unbounded_String;
+               begin
+                  Time_Part    := GNAT.Calendar.Time_IO.Image (Now, "-%H%M%S");
+                  New_Filename := To_Unbounded_String (Prefix & Time_Part &
+                                                         ".log");
 
-               Filename := To_Unbounded_String (Prefix & Time_Part & ".log");
+                  for K in 1 .. 99 loop
+                     exit when not Directories.Exists
+                       (To_String (New_Filename));
 
-               for K in 1 .. 99 loop
-                  exit when not Directories.Exists (To_String (Filename));
-
-                  Filename :=
-                    To_Unbounded_String
-                      (Prefix & Time_Part & '-' & Utils.Image (K) & ".log");
-               end loop;
+                     New_Filename :=
+                       To_Unbounded_String
+                         (Prefix & Time_Part & '-' & Utils.Image (K) & ".log");
+                  end loop;
+                  Ada.Directories.Rename (Old_Name => Current_Filename,
+                                          New_Name => To_String
+                                            (New_Filename));
+               end;
             end if;
 
          when Daily =>
@@ -430,6 +473,7 @@ package body AWS.Log is
          if Log.Writer = null then
             if Text_IO.Is_Open (Log.File) then
                Write (Log, "Stop logging.");
+               Text_IO.Flush (Log.File);
                Text_IO.Close (Log.File);
             end if;
          else
