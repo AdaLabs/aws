@@ -1,2 +1,13 @@
-soap: attributes management, soap.client interface. ipv6: fix-simultaneous socket receive bug. server: anonymized webserver version. build: rts-adalabs compatible build
+21.0.1
+--
+backport of https://github.com/AdaCore/aws/commit/af3759e418a7e0eef4f0c01798672de0c9b83c82
+	Task save response refcounter
+	Fixes regressions in 0059 and 0060 high load regression tests.
+	TN: S507-051
+21.0.0
+--
+soap: attributes management, soap.client interface.
+ipv6: fix-simultaneous socket receive bug.
+server: anonymized webserver version.
+build: rts-adalabs compatible build
 
