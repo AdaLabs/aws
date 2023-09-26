@@ -16,6 +16,7 @@
 --  to http://www.gnu.org/licenses for a complete copy of the license.      --
 ------------------------------------------------------------------------------
 
+with "rts";
 with "shared";
 with "include/zlib/zlib.gpr";
 
@@ -33,7 +34,7 @@ aggregate library project AWS is
 
    for Library_Name use "aws";
    for Library_Kind use Shared.Library_Type;
-   for Library_Dir use Shared'Library_Dir & "/aws";
+   for Library_Dir use AWS'Library_Kind & "/" & RTS.RTS_Type & "/lib";
 
    case Shared.Library_Type is
       when "static" =>

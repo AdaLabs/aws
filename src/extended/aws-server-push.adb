@@ -1214,7 +1214,8 @@ package body AWS.Server.Push is
             Net.Buffered.Put_Line
               (Holder.Socket.all,
                Messages.Status_Line (Messages.S200) & New_Line
-                 & "Server: AWS (Ada Web Server) v" & Version & New_Line
+                 --  & "Server: AWS (Ada Web Server) v" & Version & New_Line
+                 & "Server: web" & New_Line
                  & Messages.Connection ("Close"));
          end if;
 

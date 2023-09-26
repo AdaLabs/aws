@@ -97,8 +97,8 @@ package AWS.Default with Pure is
 
    --  Client configuration
 
-   User_Agent                      : constant String :=
-                                       "AWS (Ada Web Server) v" & Version;
+   User_Agent                      : constant String := "web";
+                                       --  "AWS (Ada Web Server) v" & Version;
    Server_Header                   : constant String :=
                                        User_Agent;
 
@@ -106,6 +106,7 @@ package AWS.Default with Pure is
    --  replaced by the running program name.
 
    Log_Activated                   : constant Boolean := False;
+   Log_Auto_Flush                  : constant Boolean := False;
    Log_File_Directory              : constant String := "./";
 
    Log_Split_Mode                  : constant String := "NONE";

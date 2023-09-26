@@ -224,6 +224,8 @@ package AWS.Config is
    function Log_Activated (O : Object) return Boolean with Inline;
    --  Whether the default log should be activated
 
+   function Log_Auto_Flush (O : Object) return Boolean with Inline;
+
    function Log_File_Directory (O : Object) return String with Inline;
    --  This point to the directory where log files will be written. The
    --  directory returned will end with a directory separator.
@@ -521,6 +523,7 @@ private
       Log_Split_Mode,
       Log_Size_Limit,
       Log_Activated,
+      Log_Auto_Flush,
       Error_Log_Filename_Prefix,
       Error_Log_Split_Mode,
       Error_Log_Activated,
@@ -715,6 +718,9 @@ private
 
                            Log_Activated                   =>
                              (Bool, Default.Log_Activated),
+
+                           Log_Auto_Flush                   =>
+                             (Bool, Default.Log_Auto_Flush),
 
                            Error_Log_Filename_Prefix       =>
                              (Str, +Default.Error_Log_Filename_Prefix),

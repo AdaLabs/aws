@@ -16,6 +16,8 @@
 --  to http://www.gnu.org/licenses for a complete copy of the license.      --
 ------------------------------------------------------------------------------
 
+with "rts";
+
 abstract project Shared is
 
    for Source_Dirs use ();
@@ -68,7 +70,16 @@ abstract project Shared is
    -----------------------
 
    Root_Dir   := ".build";
-   Target_Dir := Root_Dir & "/" & Target;
+   Target_Dir := "";
+   case RTS.RTS_Type is
+      when "default" =>
+         --  we need to let the target_dir as the original one
+         --  to avoid clashes in the makefile
+         --
+         Target_Dir := Root_Dir & "/" & Target;
+      when "adalabs" =>
+         Target_Dir := Root_Dir & "/" & Target & "/" & RTS.RTS_Type;
+   end case;
 
    for Exec_Dir use Target_Dir;
 
@@ -197,7 +208,7 @@ abstract project Shared is
    -------------
 
    package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
+      for Switches (others) use ("-m", "-j" & Processors) & RTS.Builder'Default_Switches("Ada");
    end Builder;
 
    ------------

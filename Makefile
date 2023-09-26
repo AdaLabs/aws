@@ -172,7 +172,7 @@ GPROPTS = -XPRJ_BUILD=$(PRJ_BUILD) -XPRJ_SOCKLIB=$(PRJ_SOCKLIB) \
                 -XSSL_DYNAMIC=$(SSL_DYNAMIC)
 
 GPR_STATIC = -XLIBRARY_TYPE=static -XXMLADA_BUILD=static
-GPR_SHARED = -XLIBRARY_TYPE=relocatable -XXMLADA_BUILD=relocatable
+GPR_SHARED = -XLIBRARY_TYPE=relocatable -XXMLADA_BUILD=relocatable -XGNATCOLL_BUILD=relocatable
 GPR_OTHER  = -XLIBRARY_TYPE=$(OTHER_LIBRARY_TYPE) \
 		-XXMLADA_BUILD=$(OTHER_LIBRARY_TYPE)
 GPR_DEFAULT = -XLIBRARY_TYPE=$(DEFAULT_LIBRARY_TYPE) \
@@ -186,6 +186,9 @@ build-tools-native: build-lib-native
 
 build-lib-native:
 	$(GPRBUILD) -p $(GPROPTS) aws.gpr
+	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) aws.gpr -XRTS_TYPE=default
+	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) aws.gpr -XRTS_TYPE=adalabs --RTS=adalabs
+
 ifeq (${ENABLE_SHARED}, true)
 	$(GPRBUILD) -p $(GPROPTS) $(GPR_SHARED) aws.gpr
 endif
@@ -223,8 +226,10 @@ gps: setup
 
 clean-native:
 	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) tools/tools.gpr
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) aws.gpr -XRTS_TYPE=default
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) aws.gpr -XRTS_TYPE=adalabs --RTS=adalabs
 ifeq (${ENABLE_SHARED}, true)
-	-$(GPRCLEAN) $(GPROPTS) $(GPR_SHARED) aws.gpr
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_SHARED) aws.gpr -XRTS_TYPE=default
 endif
 	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) gps/gps_support.gpr
 
@@ -241,6 +246,8 @@ clean: clean-native
 endif
 	-${MAKE} -C regtests $(GALL_OPTIONS) clean
 	-${MAKE} -C docs $(GALL_OPTIONS) clean
+	-${RM} -fr relocatable
+	-${RM} -fr static
 	-${RM} -fr $(BROOTDIR)
 	-${RM} -f makefile.setup
 
@@ -257,11 +264,18 @@ GPRINST_OPTS=-p -f --prefix=$(TPREFIX) \
 
 install-lib-native:
 	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) $(GPR_DEFAULT) \
-		--build-name=$(DEFAULT_LIBRARY_TYPE) aws.gpr
+		--build-name=$(DEFAULT_LIBRARY_TYPE) aws.gpr -XRTS_TYPE=default
+	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) $(GPR_DEFAULT) \
+		--build-name=rts-adalabs aws.gpr -XRTS_TYPE=adalabs --RTS=adalabs
+	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) $(GPR_STATIC) --mode=usage \
+		--build-name=$(DEFAULT_LIBRARY_TYPE) \
+		--install-name=aws tools/tools.gpr
+
 ifeq (${ENABLE_SHARED}, true)
 	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) \
 		$(GPR_OTHER) --build-name=$(OTHER_LIBRARY_TYPE) aws.gpr
 endif
+	cp distrib/aws.gpr $(TPREFIX)/share/gpr
 
 install-tools-native:
 	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) $(GPR_STATIC) --mode=usage \

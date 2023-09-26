@@ -28,3 +28,5 @@ regtests/testsuite.duration*
 regtests/testsuite.tags
 testsuite.rep
 testsuite.res_last
+relocatable
+static

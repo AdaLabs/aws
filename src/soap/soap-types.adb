@@ -126,8 +126,22 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS,  new Natural'(1), new Object_Set'(V));
+              NS,  Attribute_Containers.Empty_Map,
+              new Natural'(1), new Object_Set'(V));
    end A;
+
+   -------
+   -- Add_Attribute --
+   -------
+
+   procedure Add_Attribute (O     : in out Object;
+                            Name  : String;
+                            Value : String)
+   is
+   begin
+      O.Attributes.Include (Key      => Name,
+                            New_Item => Value);
+   end Add_Attribute;
 
    ------------
    -- Adjust --
@@ -159,8 +173,23 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, +V);
+              NS,  Attribute_Containers.Empty_Map, +V);
    end Any;
+
+   -------
+   -- Attributes_Image --
+   -------
+
+   function Attributes_Image (O : Object) return String
+   is
+      R : Unbounded_String;
+   begin
+      for Pos in O.Attributes.Iterate loop
+         Append (R, " " & Attribute_Containers.Key (Pos) & "=""" &
+            Attribute_Containers.Element (Pos) & """");
+      end loop;
+      return To_String (R);
+   end Attributes_Image;
 
    -------
    -- B --
@@ -176,7 +205,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end B;
 
    function B
@@ -189,7 +218,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end B;
 
    ---------
@@ -206,7 +235,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, To_Unbounded_String (V));
+              NS, Attribute_Containers.Empty_Map, To_Unbounded_String (V));
    end B64;
 
    -------
@@ -225,7 +254,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end D;
 
    function D
@@ -238,7 +267,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end D;
 
    -------
@@ -254,7 +283,8 @@ package body SOAP.Types is
    begin
       return (Finalization.Controlled
               with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-                   NS, To_Unbounded_String (V));
+                   NS, Attribute_Containers.Empty_Map,
+                   To_Unbounded_String (V));
    end E;
 
    ------------
@@ -288,7 +318,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end F;
 
    -------------
@@ -849,6 +879,22 @@ package body SOAP.Types is
       end if;
    end Get;
 
+   -------
+   -- Get_Attribute --
+   -------
+
+   function Get_Attribute (O    : Object;
+                           Name : String) return String
+   is
+      Pos : constant Attribute_Containers.Cursor := O.Attributes.Find (Name);
+   begin
+      if Attribute_Containers.Has_Element (Pos) then
+         return Attribute_Containers.Element (Pos);
+      else
+         return "";
+      end if;
+   end Get_Attribute;
+
    ---------------
    -- Get_Error --
    ---------------
@@ -868,6 +914,22 @@ package body SOAP.Types is
    end Get_Error;
 
    -------
+   -- Has_Attribute --
+   -------
+
+   function Has_Attribute (O    : Object;
+                           Name : String) return Boolean
+   is
+      Pos : constant Attribute_Containers.Cursor := O.Attributes.Find (Name);
+   begin
+      if Attribute_Containers.Has_Element (Pos) then
+         return True;
+      else
+         return False;
+      end if;
+   end Has_Attribute;
+
+   -------
    -- I --
    -------
 
@@ -882,7 +944,7 @@ package body SOAP.Types is
         (Finalization.Controlled
          with To_Unbounded_String (Name),
               To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end I;
 
    -----------
@@ -1265,7 +1327,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end L;
 
    -------
@@ -1280,7 +1342,8 @@ package body SOAP.Types is
    begin
       return
         (Finalization.Controlled
-         with To_Unbounded_String (Name), To_Unbounded_String (Type_Name), NS);
+         with To_Unbounded_String (Name), To_Unbounded_String (Type_Name), NS,
+              Attribute_Containers.Empty_Map);
    end N;
 
    ----------
@@ -1316,7 +1379,7 @@ package body SOAP.Types is
         (Finalization.Controlled
          with To_Unbounded_String (Name),
               To_Unbounded_String (if Type_Name = "" then Name else Type_Name),
-              NS,
+              NS, Attribute_Containers.Empty_Map,
               new Natural'(1), new Object_Set'(V));
    end R;
 
@@ -1351,7 +1414,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end S;
 
    function S
@@ -1366,7 +1429,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, To_Unbounded_String (L_V));
+              NS, Attribute_Containers.Empty_Map, To_Unbounded_String (L_V));
    end S;
 
    function S
@@ -1379,7 +1442,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, Utils.To_Utf8 (V));
+              NS, Attribute_Containers.Empty_Map, Utils.To_Utf8 (V));
    end S;
 
    ---------
@@ -1404,7 +1467,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS,  new Natural'(1), O_Set);
+              NS, Attribute_Containers.Empty_Map, new Natural'(1), O_Set);
    end Set;
 
    --------------------
@@ -1450,7 +1513,8 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name),
-         To_Unbounded_String (Type_Name), NS, V);
+         To_Unbounded_String (Type_Name), NS,
+         Attribute_Containers.Empty_Map, V);
    end T;
 
    ---------------
@@ -1476,7 +1540,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end UB;
 
    --------
@@ -1493,7 +1557,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end UI;
 
    --------
@@ -1510,7 +1574,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end UL;
 
    --------
@@ -1527,7 +1591,7 @@ package body SOAP.Types is
       return
         (Finalization.Controlled
          with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, V);
+              NS, Attribute_Containers.Empty_Map, V);
    end US;
 
    -------
@@ -1712,6 +1776,7 @@ package body SOAP.Types is
             end if;
          end if;
 
+         Append (Result, O.Attributes_Image);
          Append (Result, '>');
          Utils.Encode (XSD_String (OC).V, Result);
          Append (Result, "</");
@@ -1727,6 +1792,7 @@ package body SOAP.Types is
             Append (Result, xsi_type (XML_Type (OC)));
          end if;
 
+         Append (Result, O.Attributes_Image);
          Append (Result, '>');
          Append (Result, Image (OC));
          Append (Result, "</");
@@ -1770,6 +1836,7 @@ package body SOAP.Types is
          Append (Result, " xsi:nil=""true""");
       end if;
 
+      Append (Result, O.Attributes_Image);
       Append (Result, "/>");
    end XML_Image;
 
@@ -1893,6 +1960,7 @@ package body SOAP.Types is
          Append (Result, xsi_type (XML_Array));
       end if;
 
+      Append (Result, O.Attributes_Image);
       Append (Result, '>');
       Append (Result, New_Line);
 
@@ -1945,8 +2013,10 @@ package body SOAP.Types is
       if Encoding = WSDL.Schema.Encoded then
          Append
            (Result,
-            " xsi:type=""" & Utils.With_NS (Prefix, XML_Type (O)) & '"');
+            xsi_type (Utils.With_NS (Prefix, XML_Type (O))));
       end if;
+
+      Append (Result, O.Attributes_Image);
 
       if O.O'Length = 0 then
          --  Empty record, stop here
@@ -1988,6 +2058,7 @@ package body SOAP.Types is
          Append (Result, '"');
       end if;
 
+      Append (Result, O.Attributes_Image);
       Append (Result, ">");
       Append (Result, O.V);
       Append (Result, Utils.Tag (Tag_Name (O), Start => False));

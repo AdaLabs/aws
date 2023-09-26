@@ -62,11 +62,6 @@ package body AWS.Net.Std is
 
    package AC6 is new System.Address_To_Access_Conversions (Sockaddr_In6);
 
-   function Lock_Set
-     (Ptr : access Unsigned_Lock; Set : Unsigned_Lock) return Unsigned_Lock
-     with Import, Convention => Intrinsic,
-          External_Name => "__sync_lock_test_and_set_1";
-
    procedure Raise_Socket_Error (Error : Integer)
      with No_Return, Inline;
 
@@ -168,7 +163,7 @@ package body AWS.Net.Std is
          New_Socket := Socket_Type'(Net.Socket_Type with others => <>);
       end if;
 
-      New_Socket.S := new Socket_Hidden;
+      New_Socket.S := new Socket_Hidden'(FD => 0, RL => 0);
 
       Wait_For (Input, Socket);
 
@@ -801,9 +796,17 @@ package body AWS.Net.Std is
         with Import, Convention => Stdcall, External_Name => "recv";
 
    begin
-      if Lock_Set (Socket.S.RL'Access, 1) /= 0 then
-         raise Program_Error with "Simultaneous socket receive";
-      end if;
+      --  if Lock_Set (Socket.S.RL'Access, 1) /= 0 then
+      --     raise Program_Error with "Simultaneous socket receive";
+      --  end if;
+      --  --  AdaLabs : When no more slots are available,
+      --  --  AWS.Protocol_Handler calls Force_Clean, inducing a concurrent
+      --  --  Receive on SSL Sockets
+      --  --  The proper fix consists in adding a Clear procedure in
+      --  --  AWS.Net.Std spec to first clear the flag, but this lead to
+      --  --  interfaces impacts on COTS depending on AWS.
+      --  --  As other implementations (ipv4 & gnat) do not use such flags,
+      --  --  it has been temporarily disabled
 
       begin
          Wait_For (Input, Socket);
@@ -1046,6 +1049,7 @@ package body AWS.Net.Std is
       --  Reduce risk to send/receive data on other new created sockets.
 
       Socket.S.FD := No_Socket;
+      Socket.S.RL := 0;
 
       if OS_Lib.C_Close (FD) = Failure then
          --  Use copy of the socket with the original discriptor because
