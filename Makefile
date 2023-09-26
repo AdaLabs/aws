@@ -174,7 +174,8 @@ GPROPTS = -XPRJ_BUILD=$(PRJ_BUILD) -XPRJ_SOCKLIB=$(PRJ_SOCKLIB) \
 GPR_STATIC = -XLIBRARY_TYPE=static -XXMLADA_BUILD=static
 GPR_SHARED = -XLIBRARY_TYPE=relocatable -XXMLADA_BUILD=relocatable -XGNATCOLL_BUILD=relocatable
 GPR_OTHER  = -XLIBRARY_TYPE=$(OTHER_LIBRARY_TYPE) \
-		-XXMLADA_BUILD=$(OTHER_LIBRARY_TYPE)
+		-XXMLADA_BUILD=$(OTHER_LIBRARY_TYPE) \
+		-XGNATCOLL_BUILD=$(OTHER_LIBRARY_TYPE)
 GPR_DEFAULT = -XLIBRARY_TYPE=$(DEFAULT_LIBRARY_TYPE) \
 		-XXMLADA_BUILD=$(DEFAULT_LIBRARY_TYPE)
 
@@ -277,12 +278,7 @@ ifeq (${ENABLE_SHARED}, true)
 endif
 	cp distrib/aws.gpr $(TPREFIX)/share/gpr
 
-install-tools-native:
-	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) $(GPR_STATIC) --mode=usage \
-		--build-name=$(DEFAULT_LIBRARY_TYPE) \
-		--install-name=aws tools/tools.gpr
-
-install-native: install-clean install-lib-native install-tools-native
+install-native: install-clean install-lib-native
 
 install-lib-cross:
 	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) \
