@@ -117,10 +117,6 @@ endif
 endif
 endif
 
-ifneq ($(INSTALL), )
-$(error INSTALL variable is deprecated, please use prefix instead)
-endif
-
 ifneq ($(SHARED), )
 $(error SHARED variable is deprecated, please use ENABLE_SHARED instead)
 endif
