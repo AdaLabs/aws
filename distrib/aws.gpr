@@ -48,7 +48,7 @@ library project AWS is
       for body ("aws.net.ssl.certificate.impl") use "aws-net-ssl-certificate-impl__openssl.adb";
       for body ("aws.net.ssl") use "aws-net-ssl__openssl.adb";
       for body ("aws.net.poll_events.wait") use "aws-net-poll_events-wait__native.adb";
-      for body ("aws.net.std") use "aws-net-std__ipv6.adb";
+      for body ("aws.net.std") use "aws-net-std__gnat.adb";
       for body ("templates_parser_tasking") use "templates_parser_tasking__standard_tasking.adb";
       for body ("templates_parser.input") use "templates_parser-input__aws.adb";
       for body ("templates_parser_tasking") use "templates_parser_tasking__standard_tasking.adb";
