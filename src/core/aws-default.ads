@@ -87,7 +87,7 @@ package AWS.Default with Pure is
    Close_On_Exec                     : constant Boolean  := False;
    MIME_Types                        : constant String   := "aws.mime";
 
-   HTTP2_Activated                   : constant Boolean  := True;
+   HTTP2_Activated                   : constant Boolean  := False;
    HTTP2_Header_Table_Size           : constant          := 4_096;
    HTTP2_Enable_Push                 : constant Boolean  := False;
    HTTP2_Max_Concurrent_Streams      : constant          := 250;
