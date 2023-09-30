@@ -1553,7 +1553,8 @@ package body AWS.Server.HTTP_Utils is
       Length      : Resources.Content_Length_Type := 0;
       H_List      : Headers.List;
 
-      procedure Set_General_Header (Status_Code : Messages.Status_Code);
+      procedure Set_General_Header (Status_Code : Messages.Status_Code;
+                                    Will_Close  : Boolean);
       --  Send the "Date:", "Server:", "Set-Cookie:" and "Connection:" header
 
       procedure Send_Header_Only;
@@ -1590,10 +1591,13 @@ package body AWS.Server.HTTP_Utils is
          With_Body : constant Boolean := Messages.With_Body (Status_Code);
          File_Time : Ada.Calendar.Time;
          F_Status  : constant Resource_Status :=
-                       Get_Resource_Status (C_Stat, Filename, File_Time);
+           (case File_Mode is
+               when False => Changed,
+               when True  => Get_Resource_Status (C_Stat, Filename, File_Time)
+           );
          File      : Resources.File_Type;
       begin
-         if F_Status in Up_To_Date .. Not_Found then
+         if File_Mode and then F_Status in Up_To_Date .. Not_Found then
             if F_Status = Up_To_Date then
                --  [RFC 2616 - 10.3.5]
                Status_Code := Messages.S304;
@@ -1601,8 +1605,8 @@ package body AWS.Server.HTTP_Utils is
                --  File is not found on disk, returns now with 404
                Status_Code := Messages.S404;
             end if;
-
-            Set_General_Header (Status_Code);
+            Will_Close := True;
+            Set_General_Header (Status_Code, Will_Close);
 
             Headers.Send_Header
               (Socket => Sock, Headers => H_List, End_Block => True);
@@ -1645,7 +1649,7 @@ package body AWS.Server.HTTP_Utils is
             Will_Close := True;
          end if;
 
-         Set_General_Header (Status_Code);
+         Set_General_Header (Status_Code, Will_Close);
 
          --  Send file last-modified timestamp info in case of a file
 
@@ -1712,7 +1716,7 @@ package body AWS.Server.HTTP_Utils is
       begin
          --  First let's output the status line
 
-         Set_General_Header (Status_Code);
+         Set_General_Header (Status_Code, Will_Close);
 
          Headers.Add
            (Table => H_List,
@@ -1800,7 +1804,8 @@ package body AWS.Server.HTTP_Utils is
       -- Set_General_Header --
       ------------------------
 
-      procedure Set_General_Header (Status_Code : Messages.Status_Code) is
+      procedure Set_General_Header (Status_Code : Messages.Status_Code;
+                                    Will_Close  : Boolean) is
       begin
          --  The status line
 
