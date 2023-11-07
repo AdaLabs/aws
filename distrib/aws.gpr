@@ -2,6 +2,7 @@
 --  patched by AdaLabs
 --
 with "rts";
+with "gnatcoll";
 with "xmlada_schema";
 with "xmlada_dom";
 with "xmlada_input";
