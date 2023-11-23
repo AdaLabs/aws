@@ -411,8 +411,8 @@ package body AWS.Response.Set is
       Value : Streams.Stream_Element_Array) is
    begin
       Clear_Memory_Stream (D);
-
       RSM.Append (RSM.Stream_Type'Class (D.Stream.all), Value);
+      Set.Content_Length (D);
    end Message_Body;
 
    procedure Message_Body
@@ -450,6 +450,7 @@ package body AWS.Response.Set is
 
          exit when First > Len;
       end loop;
+      Set.Content_Length (D);
    end Message_Body;
 
    ----------
