@@ -857,6 +857,11 @@ package body AWS.Server.HTTP_Utils is
       begin
          begin
             if Mode in Attachment .. File_Upload then
+               if CNF.Upload_Directory (Server_Config) = "" then
+                  raise Constraint_Error
+                    with "File upload not supported by server "
+                      & CNF.Server_Name (Server_Config);
+               end if;
                Streams.Stream_IO.Create
                  (File, Streams.Stream_IO.Out_File, Server_Filename);
             end if;
