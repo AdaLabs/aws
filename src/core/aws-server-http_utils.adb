@@ -1562,7 +1562,7 @@ package body AWS.Server.HTTP_Utils is
                                     Will_Close  : Boolean);
       --  Send the "Date:", "Server:", "Set-Cookie:" and "Connection:" header
 
-      procedure Send_Header_Only;
+      procedure Send_Header_Only (Will_Close  : Boolean);
       --  Send HTTP message header only. This is used to implement the HEAD
       --  request.
 
@@ -1610,11 +1610,8 @@ package body AWS.Server.HTTP_Utils is
                --  File is not found on disk, returns now with 404
                Status_Code := Messages.S404;
             end if;
-            Will_Close := True;
-            Set_General_Header (Status_Code, Will_Close);
-
-            Headers.Send_Header
-              (Socket => Sock, Headers => H_List, End_Block => True);
+            Will_Close := False;
+            Send_Header_Only (Will_Close);
 
             return;
 
@@ -1717,7 +1714,7 @@ package body AWS.Server.HTTP_Utils is
       -- Send_Header_Only --
       ----------------------
 
-      procedure Send_Header_Only is
+      procedure Send_Header_Only (Will_Close  : Boolean) is
       begin
          --  First let's output the status line
 
@@ -1886,7 +1883,7 @@ package body AWS.Server.HTTP_Utils is
 
          when Response.Header =>
             HTTP_Server.Slots.Mark_Phase (Line_Index, Server_Response);
-            Send_Header_Only;
+            Send_Header_Only (Will_Close);
 
          when Response.Socket_Taken =>
             HTTP_Server.Slots.Socket_Taken (Line_Index);
