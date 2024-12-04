@@ -251,6 +251,11 @@ endif
 	-${RM} -fr static
 	-${RM} -fr $(BROOTDIR)
 	-${RM} -f makefile.setup
+	-${RM} -f .clang-format
+	-${RM} -rf .clangd/
+	-${RM} -f aws-loc.xml
+	-${RM} -f aws.lexch
+	-${RM} -f gpsauto.cgpr
 
 #######################################################################
 #  install

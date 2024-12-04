@@ -1,3 +1,8 @@
+.clang-format
+.clangd/
+aws-loc.xml
+aws.lexch
+gpsauto.cgpr
 *.ali
 *.exe
 *.o
