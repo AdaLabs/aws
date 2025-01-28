@@ -1,7 +1,6 @@
-------------------------------------------------------------------------------
---                              Ada Web Server                              --
+--                              ADA ON RAILS                                --
 --                                                                          --
---                     Copyright (C) 2005-2017, AdaCore                     --
+--                     Copyright (C) 2010-2021, AdaLabs Ltd                 --
 --                                                                          --
 --  This library is free software;  you can redistribute it and/or modify   --
 --  it under terms of the  GNU General Public License  as published by the  --
@@ -27,45 +26,32 @@
 --  covered by the  GNU Public License.                                     --
 ------------------------------------------------------------------------------
 
-with Ada.Finalization;
+package AWS.Cookie.Extras is
 
-with SOAP.Name_Space;
-with SOAP.Utils;
+   type Same_Site_Kinds is (None,
+                            Lax,
+                            Strict);
 
-package body SOAP.Types.Untyped is
+   procedure Set (Content   : in out Response.Data;
+                  Key       : String;
+                  Value     : String;
+                  Same_Site : Same_Site_Kinds;
+                  Comment   : String := "";
+                  Domain    : String := "";
+                  Max_Age   : Duration := Default.Ten_Years;
+                  Path      : String := "/";
+                  Secure    : Boolean := False;
+                  HTTP_Only : Boolean := False)
+     with Pre => Response.Mode (Content) /= Response.No_Data;
+   --
+   --  re-implementation of AWS.Cookie.Set with the extra SameSite handling
+   --
 
-   -------
-   -- S --
-   -------
-
-   overriding function S
-     (V         : String;
-      Name      : String := "item";
-      Type_Name : String := XML_String;
-      NS        : SOAP.Name_Space.Object := SOAP.Name_Space.No_Name_Space)
-      return Untyped
-   is
-      L_V : constant String := Utils.To_Utf8 (V);
-   begin
-      return
-        (Finalization.Controlled
-         with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, SOAP.Types.Attribute_Containers.Empty_Map,
-              To_Unbounded_String (L_V));
-   end S;
-
-   overriding function S
-     (V         : Unbounded_String;
-      Name      : String := "item";
-      Type_Name : String := XML_String;
-      NS        : SOAP.Name_Space.Object := SOAP.Name_Space.No_Name_Space)
-      return Untyped is
-   begin
-      return
-        (Finalization.Controlled
-         with To_Unbounded_String (Name), To_Unbounded_String (Type_Name),
-              NS, SOAP.Types.Attribute_Containers.Empty_Map,
-              Utils.To_Utf8 (V));
-   end S;
-
-end SOAP.Types.Untyped;
+   procedure Expire (Content   : in out Response.Data;
+                     Key       : String;
+                     Same_Site : Same_Site_Kinds;
+                     Path      : String := "/");
+   --
+   --  re-implementation of AWS.Cookie.Expire with the extra SameSite handling
+   --
+end AWS.Cookie.Extras;

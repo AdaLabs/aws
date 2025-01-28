@@ -87,7 +87,7 @@ package AWS.Default with Pure is
    Close_On_Exec                     : constant Boolean  := False;
    MIME_Types                        : constant String   := "aws.mime";
 
-   HTTP2_Activated                   : constant Boolean  := True;
+   HTTP2_Activated                   : constant Boolean  := False;
    HTTP2_Header_Table_Size           : constant          := 4_096;
    HTTP2_Enable_Push                 : constant Boolean  := False;
    HTTP2_Max_Concurrent_Streams      : constant          := 250;
@@ -97,8 +97,8 @@ package AWS.Default with Pure is
 
    --  Client configuration
 
-   User_Agent                      : constant String :=
-                                       "AWS (Ada Web Server) v" & Version;
+   User_Agent                      : constant String := "web";
+                                       --  "AWS (Ada Web Server) v" & Version;
    Server_Header                   : constant String :=
                                        User_Agent;
 
@@ -106,6 +106,7 @@ package AWS.Default with Pure is
    --  replaced by the running program name.
 
    Log_Activated                   : constant Boolean := False;
+   Log_Auto_Flush                  : constant Boolean := False;
    Log_File_Directory              : constant String := "./";
 
    Log_Split_Mode                  : constant String := "NONE";
@@ -171,9 +172,9 @@ package AWS.Default with Pure is
    TLS_Ticket_Support              : constant Boolean := False;
    Server_Certificate              : constant String  := "aws-server.crt";
    Server_Key                      : constant String  := "aws-server.key";
-   Client_Certificate              : constant String  := "cert.pem";
-   Exchange_Certificate            : constant Boolean := True;
-   Check_Certificate               : constant Boolean := True;
+   Client_Certificate              : constant String  := "";
+   Exchange_Certificate            : constant Boolean := False;
+   Check_Certificate               : constant Boolean := False;
    Trusted_CA                      : constant String  :=
                                        "/etc/ssl/certs/ca-certificates.crt";
    CRL_File                        : constant String  := "";

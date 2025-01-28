@@ -38,10 +38,8 @@ package AWS.Server.Log is
    procedure Start
      (Web_Server      : in out HTTP;
       Split_Mode      : AWS.Log.Split_Mode := AWS.Log.None;
-      Filename_Prefix : String             := "";
-      Auto_Flush      : Boolean            := False);
-   --  Activate server's logging activity. See AWS.Log. If Auto_Flush is True
-   --  the file will be flushed after all written data.
+      Filename_Prefix : String             := "");
+   --  Activate server's logging activity. See AWS.Log.
 
    procedure Start
      (Web_Server : in out HTTP;

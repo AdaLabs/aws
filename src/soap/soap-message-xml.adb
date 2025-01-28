@@ -91,6 +91,28 @@ package body SOAP.Message.XML is
       Schema       : WSDL.Schema.Definition;
    end record;
 
+   procedure Add_Attributes
+     (O : in out Types.Object'Class;
+      N : DOM.Core.Node);
+
+   procedure Add_Attributes
+     (O : in out Types.Object'Class;
+      N : DOM.Core.Node)
+   is
+      Attributes : constant DOM.Core.Named_Node_Map
+         := DOM.Core.Nodes.Attributes (N);
+   begin
+      for K in 0 .. DOM.Core.Nodes.Length (Attributes) - 1 loop
+         declare
+            Attribute : constant DOM.Core.Node
+               := DOM.Core.Nodes.Item (Attributes, K);
+         begin
+            O.Add_Attribute (Name  => Node_Name (Attribute),
+                             Value => Node_Value (Attribute));
+         end;
+      end loop;
+   end Add_Attributes;
+
    function To_Type
      (Type_Name : String;
       NS        : Namespaces;
@@ -989,6 +1011,7 @@ package body SOAP.Message.XML is
 
          A := Types.A (OS (1 .. K), Name, Type_Name);
          Unchecked_Free (OS);
+         Add_Attributes (A, N);
          return A;
       end;
    end Parse_Array;
@@ -1011,10 +1034,20 @@ package body SOAP.Message.XML is
 
       if Value = null then
          --  No node found, this is an empty Base64 content
-         return Types.B64 ("", Name, Type_Name);
-
+         declare
+            O : Types.Object'Class := Types.B64 ("", Name, Type_Name);
+         begin
+            Add_Attributes (O, N);
+            return O;
+         end;
       else
-         return Types.B64 (Node_Value (Value), Name, Type_Name);
+         declare
+            O : Types.Object'Class :=
+               Types.B64 (Node_Value (Value), Name, Type_Name);
+         begin
+            Add_Attributes (O, N);
+            return O;
+         end;
       end if;
    end Parse_Base64;
 
@@ -1096,10 +1129,20 @@ package body SOAP.Message.XML is
         or else Node_Value (Value) = "true"
         or else Node_Value (Value) = "TRUE"
       then
-         return Types.B (True, Name);
+         declare
+            O : Types.Object'Class := Types.B (True, Name);
+         begin
+            Add_Attributes (O, N);
+            return O;
+         end;
       else
          --  ??? we should check for wrong boolean value
-         return Types.B (False, Name, Type_Name);
+         declare
+            O : Types.Object'Class := Types.B (False, Name, Type_Name);
+         begin
+            Add_Attributes (O, N);
+            return O;
+         end;
       end if;
    end Parse_Boolean;
 
@@ -1113,8 +1156,11 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O     : Types.Object'Class :=
+         Types.B (Types.Byte'Value (Node_Value (Value)), Name, Type_Name);
    begin
-      return Types.B (Types.Byte'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Byte;
 
    ----------------
@@ -1189,8 +1235,13 @@ package body SOAP.Message.XML is
       else
          D := Long_Float'Value (V);
       end if;
-
-      return Types.D (D, Name, Type_Name);
+      declare
+         O : Types.Object'Class :=
+         Types.D (D, Name, Type_Name);
+      begin
+         Add_Attributes (O, N);
+         return O;
+      end;
    end Parse_Double;
 
    ------------------------
@@ -1204,7 +1255,10 @@ package body SOAP.Message.XML is
    is
       Value : constant DOM.Core.Node := First_Child (N);
       D     : constant String        := Node_Value (Value);
+      O     : Types.Object'Class :=
+         Utils.Duration (D, Name, Type_Name);
    begin
+      Add_Attributes (O, N);
       return Utils.Duration (D, Name, Type_Name);
    end Parse_Duration;
 
@@ -1215,14 +1269,17 @@ package body SOAP.Message.XML is
    function Parse_Enumeration
      (Name      : String;
       N         : DOM.Core.Node;
-      Type_Name : String := "") return Types.Object'Class is
-   begin
-      return Types.E
+      Type_Name : String := "") return Types.Object'Class
+   is
+      O : Types.Object'Class := Types.E
         (Node_Value (First_Child (N)),
          (if Type_Name = ""
           then Utils.No_NS (SOAP.XML.Get_Attr_Value (N, "type"))
           else Type_Name),
          Name);
+   begin
+      Add_Attributes (O, N);
+      return O;
    end Parse_Enumeration;
 
    --------------------
@@ -1287,8 +1344,13 @@ package body SOAP.Message.XML is
       else
          F := Float'Value (V);
       end if;
-
-      return Types.F (F, Name, Type_Name);
+      declare
+         O : Types.Object'Class :=
+         Types.F (F, Name, Type_Name);
+      begin
+         Add_Attributes (O, N);
+         return O;
+      end;
    end Parse_Float;
 
    ------------------
@@ -1314,8 +1376,11 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class
+         := Types.I (Integer'Value (Node_Value (Value)), Name, Type_Name);
    begin
-      return Types.I (Integer'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Int;
 
    ----------------
@@ -1328,8 +1393,11 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class :=
+         Types.L (Types.Long'Value (Node_Value (Value)), Name, Type_Name);
    begin
-      return Types.L (Types.Long'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Long;
 
    ----------------------
@@ -1690,6 +1758,7 @@ package body SOAP.Message.XML is
                Utils.No_NS (To_String (T_Name)), NS);
 
             Unchecked_Free (OS);
+            Add_Attributes (R, N);
             return R;
          end;
       end if;
@@ -1705,8 +1774,11 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class :=
+         Types.S (Types.Short'Value (Node_Value (Value)), Name, Type_Name);
    begin
-      return Types.S (Types.Short'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Short;
 
    ------------------
@@ -1730,8 +1802,12 @@ package body SOAP.Message.XML is
             Append (S, Node_Value (P));
          end if;
       end loop;
-
-      return Types.XSD_String'(Types.S (S, Name, Type_Name));
+      declare
+         O : Types.Object'Class := Types.S (S, Name, Type_Name);
+      begin
+         Add_Attributes (O, N);
+         return O;
+      end;
    end Parse_String;
 
    ----------------
@@ -1760,8 +1836,11 @@ package body SOAP.Message.XML is
    is
       Value : constant DOM.Core.Node := First_Child (N);
       TI    : constant String        := Node_Value (Value);
+      O     : Types.Object'Class :=
+         Utils.Time_Instant (TI, Name, Type_Name);
    begin
-      return Utils.Time_Instant (TI, Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Time_Instant;
 
    -----------------
@@ -1789,9 +1868,12 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class :=
+         Types.UB (Types.Unsigned_Byte'Value (Node_Value (Value)),
+                   Name, Type_Name);
    begin
-      return Types.UB
-        (Types.Unsigned_Byte'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Unsigned_Byte;
 
    ------------------------
@@ -1804,9 +1886,12 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class :=
+         Types.UI (Types.Unsigned_Int'Value (Node_Value (Value)),
+                   Name, Type_Name);
    begin
-      return Types.UI
-        (Types.Unsigned_Int'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Unsigned_Int;
 
    -------------------------
@@ -1819,9 +1904,12 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class :=
+         Types.UL (Types.Unsigned_Long'Value (Node_Value (Value)),
+                   Name, Type_Name);
    begin
-      return Types.UL
-        (Types.Unsigned_Long'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Unsigned_Long;
 
    --------------------------
@@ -1834,9 +1922,12 @@ package body SOAP.Message.XML is
       N         : DOM.Core.Node) return Types.Object'Class
    is
       Value : constant DOM.Core.Node := First_Child (N);
+      O : Types.Object'Class :=
+         Types.US (Types.Unsigned_Short'Value (Node_Value (Value)),
+                   Name, Type_Name);
    begin
-      return Types.US
-        (Types.Unsigned_Short'Value (Node_Value (Value)), Name, Type_Name);
+      Add_Attributes (O, N);
+      return O;
    end Parse_Unsigned_Short;
 
    -------------------
@@ -1859,8 +1950,13 @@ package body SOAP.Message.XML is
             Append (S, Node_Value (P));
          end if;
       end loop;
-
-      return Types.Untyped.S (S, Name);
+      declare
+         O : Types.Object'Class :=
+            Types.Untyped.S (S, Name);
+      begin
+         Add_Attributes (O, N);
+         return O;
+      end;
    end Parse_Untyped;
 
    -------------------

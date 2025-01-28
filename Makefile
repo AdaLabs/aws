@@ -129,23 +129,40 @@ ${MODULES_INSTALL}: force
 ${MODULES_CHECK}: force
 	${MAKE} -C ${@:%_check=%} check $(GALL_OPTIONS)
 
+GPROPTS = -XPRJ_BUILD=$(PRJ_BUILD) -XTGT_DIR=$(TGT_DIR) \
+		-XPRJ_SOCKLIB=$(PRJ_SOCKLIB) -XPRJ_LDAP=$(PRJ_LDAP) \
+		-XPRJ_XMLADA=$(PRJ_XMLADA) -XPRJ_LAL=$(PRJ_LAL) \
+		-XPROCESSORS=$(PROCESSORS) -XSOCKET=$(SOCKET) \
+		-XPRJ_TARGET=$(PRJ_TARGET) -XTARGET=$(TARGET) \
+	        -XTHREAD_SANITIZER=$(THREAD_SANITIZER) \
+                -XSSL_DYNAMIC=$(SSL_DYNAMIC)
+
+GPR_STATIC = -XLIBRARY_TYPE=static -XXMLADA_BUILD=static
+GPR_SHARED = -XLIBRARY_TYPE=relocatable -XXMLADA_BUILD=relocatable -XGNATCOLL_BUILD=relocatable -XBUILD_TYPE=relocatable
+
 #######################################################################
 #  build
 
 #  build awsres tool as needed by wsdl2aws
 
 build-awsres-tool-native:
+	echo 	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) -XTO_BUILD=awsres.adb \
+		tools/tools.gpr	
 	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) -XTO_BUILD=awsres.adb \
 		tools/tools.gpr
 
 build-tools-native: gen-templates build-lib-native
+	echo $(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) tools/tools.gpr
 	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) tools/tools.gpr
 
-build-libs-%:
-	$(GPRBUILD) -p $(GPROPTS) \
-		-XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* aws.gpr
+build-lib-native:
+	$(GPRBUILD) -p $(GPROPTS) aws.gpr
+	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) aws.gpr -XRTS_TYPE=default -XBUILD_TYPE=static
+	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) aws.gpr -XRTS_TYPE=adalabs -XBUILD_TYPE=rts-adalabs --RTS=adalabs
 
-build-lib-native: ${LIBAWS_TYPES:%=build-libs-%}
+ifeq (${ENABLE_SHARED}, true)
+	$(GPRBUILD) -p $(GPROPTS) $(GPR_SHARED) aws.gpr
+endif
 
 build-gps-support: build-lib-native
 	$(GPRBUILD) -p $(GPROPTS) $(GPR_STATIC) gps/gps_support.gpr
@@ -184,14 +201,17 @@ gps: setup
 #######################################################################
 #  clean
 
-clean-libs-%:
-	$(GPRCLEAN) $(GPROPTS) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* aws.gpr
 
-clean-lib-native: ${LIBAWS_TYPES:%=clean-libs-%}
-
+clean-lib-native:
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) -XRTS_TYPE=default -XBUILD_TYPE=static aws.gpr
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) -XRTS_TYPE=adalabs --RTS=adalabs -XBUILD_TYPE=rts-adalabs aws.gpr
+ifeq (${ENABLE_SHARED}, true)
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_SHARED) -XRTS_TYPE=default -XBUILD_TYPE=relocatable aws.gpr
+endif
+	
 clean-native: clean-lib-native
 	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) tools/tools.gpr
-	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) gps/gps_support.gpr
+	-$(GPRCLEAN) $(GPROPTS) $(GPR_STATIC) gps/gps_support.gpr -XBUILD_TYPE=static
 
 clean-libs-cross-%:
 	$(GPRCLEAN) --target=$(TARGET) \
@@ -207,6 +227,15 @@ endif
 	-${MAKE} -C regtests $(GALL_OPTIONS) clean
 	-${MAKE} -C docs $(GALL_OPTIONS) clean
 	-${RM} -fr $(BDIR)
+	-${RM} -fr relocatable
+	-${RM} -fr static
+	-${RM} -fr $(BROOTDIR)
+	-${RM} -rf $(TARGET)
+	-${RM} -f .clang-format
+	-${RM} -rf .clangd/
+	-${RM} -f aws-loc.xml
+	-${RM} -f aws.lexch
+	-${RM} -f gpsauto.cgpr
 
 #######################################################################
 #  install
@@ -219,30 +248,33 @@ endif
 GPRINST_OPTS=-p -f --prefix=$(TPREFIX) \
 	--build-var=LIBRARY_TYPE --build-var=AWS_BUILD
 
-install-libs-%:
-	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) \
-		-XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
-		--build-name=$* aws.gpr
-
-install-lib-native: ${LIBAWS_TYPES:%=install-libs-%}
-
-install-tools-native:
-	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) $(GPR_STATIC) --mode=usage \
+install-lib-native:
+	$(GPRINSTALL) $(GPROPTS) $(GPR_STATIC) -XBUILD_TYPE=static -XRTS_TYPE=default $(GPRINST_OPTS) \
+		--build-name=static aws.gpr
+	$(GPRINSTALL) $(GPROPTS) $(GPR_STATIC) -XBUILD_TYPE=rts-adalabs -XRTS_TYPE=adalabs --RTS=adalabs $(GPRINST_OPTS) \
+		--build-name=rts-adalabs aws.gpr
+	$(GPRINSTALL) $(GPROPTS) $(GPR_STATIC) -XBUILD_TYPE=static $(GPRINST_OPTS) --mode=usage \
 		--build-name=static \
 		--install-name=aws tools/tools.gpr
 
-install-native: install-clean install-lib-native install-tools-native
+ifeq (${ENABLE_SHARED}, true)
+	$(GPRINSTALL) $(GPROPTS) $(GPR_SHARED) $(GPRINST_OPTS) \
+		 --build-name=relocatable aws.gpr
+endif
+	cp distrib/aws.gpr $(TPREFIX)/share/gpr
+
+install-native: install-clean install-lib-native
 
 install-libs-cross-%:
-	$(GPRINSTALL) $(GPROPTS) $(GPRINST_OPTS) \
-		--target=$(TARGET) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
+	$(GPRINSTALL) $(GPROPTS) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPRINST_OPTS) \
+		--target=$(TARGET) \
 		--build-name=$* aws.gpr
 
 install-lib-cross: ${LIBAWS_TYPES:%=install-libs-cross-%}
 
 install-tools-cross:
-	$(GPRINSTALL) $(GPROPTS)  $(GPRINST_OPTS) --mode=usage \
-		--target=$(TARGET) $(GPROPTS) \
+	$(GPRINSTALL) $(GPROPTS) $(GPROPTS) $(GPRINST_OPTS) --mode=usage \
+		--target=$(TARGET)  \
 		--install-name=aws tools/tools.gpr
 
 install-cross: install-clean install-libs-cross install-tools-cross

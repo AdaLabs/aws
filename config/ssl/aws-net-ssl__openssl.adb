@@ -957,7 +957,7 @@ package body AWS.Net.SSL is
       Priorities           : String    := "";
       Ticket_Support       : Boolean   := False;
       Exchange_Certificate : Boolean   := False;
-      Check_Certificate    : Boolean   := True;
+      Check_Certificate    : Boolean   := False;
       Trusted_CA_Filename  : String    := "";
       CRL_Filename         : String    := "";
       Session_Cache_Size   : Natural   := 16#4000#;
@@ -987,7 +987,7 @@ package body AWS.Net.SSL is
       Priorities           : String    := "";
       Ticket_Support       : Boolean   := False;
       Exchange_Certificate : Boolean   := False;
-      Check_Certificate    : Boolean   := True;
+      Check_Certificate    : Boolean   := False;
       Trusted_CA_Filename  : String    := Default.Trusted_CA;
       CRL_Filename         : String    := "";
       Session_Cache_Size   : Natural   := 16#4000#;

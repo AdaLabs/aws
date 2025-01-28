@@ -1,3 +1,4 @@
 [submodule "templates_parser"]
 	path = templates_parser
 	url = ../templates-parser
+	branch = 23.2-adalabs

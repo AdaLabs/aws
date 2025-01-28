@@ -1,3 +1,8 @@
+.clang-format
+.clangd/
+aws-loc.xml
+aws.lexch
+gpsauto.cgpr
 *.ali
 *.exe
 *.o
@@ -28,3 +33,5 @@ regtests/testsuite.duration*
 regtests/testsuite.tags
 testsuite.rep
 testsuite.res_last
+relocatable
+static
