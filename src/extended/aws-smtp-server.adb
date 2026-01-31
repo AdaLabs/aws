@@ -221,7 +221,13 @@ package body AWS.SMTP.Server is
       Messages.Set.Set_Body (Message, To_String (Message_Body));
       Messages.Set.Headers (Message, Headers);
 
+      Net.Free (S);
       return Message;
+
+   exception
+      when others =>
+         Net.Free (S);
+         raise;
    end Get_Message;
 
    --------------
