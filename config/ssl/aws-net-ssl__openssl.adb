@@ -597,6 +597,8 @@ package body AWS.Net.SSL is
       Res  : C.int;
       SRes : C.long;
    begin
+      Success := False;
+      Socket.Set_Timeout (5.0);
       loop
          Res := SSL_do_handshake (Socket.SSL);
 

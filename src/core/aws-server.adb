@@ -140,9 +140,14 @@ package body AWS.Server is
          then
             declare
                SSL_Socket : Net.SSL.Socket_Type;
+               Failure    : AWS.Status.Data;
             begin
                SSL_Socket := Net.SSL.Secure_Server
                  (New_Socket.all, Server.SSL_Config);
+               AWS.Status.Set.Socket (Failure,
+                                      SSL_Socket'Unrestricted_Access);
+               --  Mandatory to set the Socket here to get the Socket Peername
+               --  once it is valid
                Net.Free (New_Socket);
                SSL_Socket.Do_Handshake; -- Handshake need for HTTP/2 ALPN
                pragma Warnings (Off);
@@ -150,6 +155,9 @@ package body AWS.Server is
             exception
                when Net.Socket_Error =>
                   if New_Socket = null then
+                     AWS.Log.Write (Server.Error_Log,
+                                    Failure,
+                                    "SSL handshake timeout");
                      --  It mean error in SSL handshake, shutdown socket and
                      --  get another one in next iteration.
                      SSL_Socket.Shutdown;
