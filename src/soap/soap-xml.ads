@@ -60,4 +60,8 @@ package SOAP.XML is
    --  Returns the next sibling, skip #text nodes. Return null if there is no
    --  more sibbling.
 
+   function First_Child_If_Exists (N : DOM.Core.Node) return DOM.Core.Node
+     with Pre => N /= null;
+   --  Returns the first child if it exists and N otherwise
+
 end SOAP.XML;
